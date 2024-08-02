@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!-- namespace = .java 와 .xml을 연결 -->
+<mapper namespace="kr.bit.mapper.BoardMapper">
+	
+	<sql id="search">
+	    <if test="type=='companyName'">
+	        where companyName like concat('%',#{keyword},'%')
+	    </if>
+	    <if test="type=='position'">
+	        where position like concat('%',#{keyword},'%')
+	    </if>
+	    <if test="type=='skill'">
+	        where skill like concat('%',#{keyword},'%')
+	    </if>
+	</sql>
+	
+	<select id="getList" resultType="kr.bit.entity.Board" parameterType="kr.bit.entity.Criteria">
+		select * from tblBoard 
+			<include refid="search"/>
+		order by idx DESC
+		limit #{pageStart}, #{perPageNum}
+	</select>
+	
+	<insert id="insert" parameterType="kr.bit.entity.Board">
+		insert into tblBoard(idx, companyID, companyName, nation, region,position,reward,skill,content)
+			select IFNULL(MAX(idx)+1,1), #{companyID}, #{companyName}, #{nation}, #{region}, #{position},#{reward},#{skill},#{content}
+			from tblBoard
+	</insert>
+	
+	<insert id="insertSelectKey" parameterType="kr.bit.entity.Board">
+	<selectKey keyProperty="idx" resultType="kr.bit.entity.Board" order="BEFORE">
+		select IFNULL(max(idx)+1,1) as idx
+		from tblBoard
+	</selectKey>
+		insert into 
+		tblBoard(idx, companyID, companyName, nation, region,position,reward,skill,content)
+		values(#{idx},#{companyID}, #{companyName}, #{nation}, #{region}, #{position},#{reward},#{skill},#{content})	
+	</insert>
+	
+	<select id="read" resultType="kr.bit.entity.Board">
+		select * from tblBoard where idx=#{idx}
+	</select>
+	
+	<update id="update" parameterType="kr.bit.entity.Board">
+		update tblBoard set position=#{position}, reward=#{reward}, skill=#{skill}, content=#{content}
+		where idx=#{idx}
+	</update>
+	
+	<delete id="delete">
+		delete from tblBoard where idx=#{idx}
+	</delete>
+	
+	<select id="totalCount" resultType="int" parameterType="kr.bit.entity.Criteria">
+		select count(*) from tblBoard
+		<include refid="search"/>
+	</select>
+	
+	<select id="hiringList" resultType="kr.bit.entity.Board" parameterType="String">
+		select * from tblBoard where companyName=#{companyName}
+	</select>
+	
+	<select id="applyCount" parameterType="map" resultType="int">
+		select count(*) from applyList where idx=#{idx} and memID=#{memID}
+	</select>
+	
+	<insert id="apply" parameterType="map">
+		insert into applyList(idx, memID) values(#{idx}, #{memID})
+	</insert>
+	
+</mapper>
